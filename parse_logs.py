@@ -242,6 +242,66 @@ def ml_isolation_forest(df, features=None, test_size=0.3, random_state=42):
     return df
 
 
+def plot_anomalies(df, outpath: str = 'anomalies.png') -> str:
+    """
+    Plot anomaly counts over time and save the figure to `outpath`.
+
+    The function groups rows by the `minute` column and counts rows where
+    either `detected_anomaly` or `ml_detected` is True. It creates a
+    simple line/bar chart and saves it as a PNG. Returns the path to
+    the saved image.
+
+    The function imports Matplotlib locally so the script can still run
+    when matplotlib is not installed (it will raise an informative
+    error).
+    """
+    try:
+        import pandas as pd
+    except Exception:
+        raise RuntimeError('pandas is required for plotting')
+
+    try:
+        import matplotlib
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+    except Exception as e:
+        raise RuntimeError('matplotlib is required to generate plots: ' + str(e))
+
+    df = df.copy()
+    # Ensure detection columns exist
+    if 'detected_anomaly' not in df.columns:
+        df['detected_anomaly'] = False
+    if 'ml_detected' not in df.columns:
+        df['ml_detected'] = False
+
+    # Ensure minute column exists
+    if 'minute' not in df.columns:
+        try:
+            df['minute'] = pd.to_datetime(df['timestamp'], errors='coerce').dt.floor('min')
+        except Exception:
+            df['minute'] = pd.NaT
+
+    # Compute counts per minute
+    df['is_alert'] = df['detected_anomaly'] | df['ml_detected']
+    counts = df.groupby('minute')['is_alert'].sum().fillna(0)
+
+    # If counts is empty or all zeros, still create a minimal plot
+    fig, ax = plt.subplots(figsize=(10, 4))
+    if counts.empty:
+        ax.text(0.5, 0.5, 'No alerts', ha='center', va='center')
+    else:
+        counts.plot(kind='bar', ax=ax, color='tab:red')
+        ax.set_xlabel('Minute')
+        ax.set_ylabel('Anomaly Count')
+        ax.set_title('Anomaly Counts per Minute')
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+
+    plt.savefig(outpath, dpi=150)
+    plt.close(fig)
+    return outpath
+
+
 def alert_on_detections(df):
     """
     Print alerts for rows where `detected_anomaly` or `ml_detected` is True.
