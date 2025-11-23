@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>IDS Dashboard</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 20px; }
+      table { border-collapse: collapse; width: 100%; }
+      th, td { border: 1px solid #ddd; padding: 8px; }
+      th { background: #f4f4f4; }
+      tr:nth-child(even) { background: #f9f9f9; }
+      .rule { color: #b20000; }
+      .ml { color: #ff8c00; }
+    </style>
+  </head>
+  <body>
+    <h1>IDS Dashboard - Recent Alerts</h1>
+    {% if alerts and alerts|length > 0 %}
+      <table>
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Source IP</th>
+            <th>Type</th>
+            <th>Protocol</th>
+            <th>Port</th>
+            <th>Payload</th>
+            <th>Ground Truth</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in alerts %}
+          <tr>
+            <td>{{ a.timestamp }}</td>
+            <td>{{ a.src_ip }}</td>
+            <td>{{ a.type }}</td>
+            <td>{{ a.protocol }}</td>
+            <td>{{ a.port }}</td>
+            <td>{{ a.payload_size }}</td>
+            <td>{{ a.is_malicious }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No alerts to show.</p>
+    {% endif %}
+  </body>
+</html>
