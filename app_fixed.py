@@ -17,7 +17,7 @@ def _import_parse_logs():
         raise RuntimeError(f"Failed to import parse_logs: {e}") from e
 
 
-app = FastAPI(title="IDS Dashboard")
+app = FastAPI(title="IDS Dashboard (fixed)")
 
 app.add_middleware(
     CORSMiddleware,
@@ -26,16 +26,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Ensure directories exist
 os.makedirs("static", exist_ok=True)
 os.makedirs("templates", exist_ok=True)
 
-# Mount static if not present
-try:
-    has_static = any(getattr(r, "path", None) in ("/static", "/static/{path:path}") for r in app.router.routes)
-except Exception:
-    has_static = False
-if not has_static:
+if not any(getattr(r, "path", None) in ("/static", "/static/{path:path}") for r in app.router.routes):
     app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
